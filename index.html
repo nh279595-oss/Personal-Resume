@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人简历在线生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; overflow-x: hidden; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+        select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background: transparent; }
+        .modal-bg { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
+        .tech-gradient { background: linear-gradient(135deg, #0b2545 0%, #13315c 100%); }
+        
+        /* 拖拽高亮效果 */
+        .drag-over { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.05) !important; scale: 1.02; }
+    </style>
+</head>
+<body class="bg-[#F8FAFC]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
+
+        // 文件转 Base64 辅助函数（用于持久化存储）
+        const fileToBase64 = (file) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(err);
+        });
+
+        const INITIAL_DATA = {
+            headerTitle: '包小图的个人简历',
+            basicInfo: {
+                name: '包小图',
+                gender: '女',
+                age: '28',
+                workYears: '5年',
+                phone: '13888880000',
+                email: 'xxxxx@126.com',
+                intent: '高级UI设计师',
+                salary: '20k-30k',
+                city: '杭州',
+                avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop'
+            },
+            sections: [
+                { 
+                    id: 'work', title: '工作经历', type: 'list', 
+                    items: [
+                        { id: 'w1', time: '2020.06 - 至今', school: '某独角兽科技', major: '设计师', desc: '负责公司核心产品的品牌升级与视觉体系搭建。' }
+                    ] 
+                },
+                { 
+                    id: 'edu', title: '教育经历', type: 'list', 
+                    items: [
+                        { id: 'e1', time: '2013.09 - 2017.06', school: '浙江大学', major: '全日制', desc: '主修课程：交互设计、品牌设计。' }
+                    ] 
+                },
+                { 
+                    id: 'img_assets', title: '视觉作品集', type: 'media_group', mediaType: 'image',
+                    groups: [{ id: 'g1', items: [], description: '此处描述作品的设计思路与技术实现...' }] 
+                },
+                { 
+                    id: 'video_assets', title: '视频履历', type: 'media_group', mediaType: 'video',
+                    groups: [{ id: 'gv1', items: [], description: '在此展示个人项目演示或视频介绍...' }] 
+                }
+            ]
+        };
+
+        function App() {
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem('local_resume_v7_persistent');
+                return saved ? JSON.parse(saved) : INITIAL_DATA;
+            });
+            const [isSaved, setIsSaved] = useState(false);
+            const [draggedIdx, setDraggedIdx] = useState(null);
+            const [previewMedia, setPreviewMedia] = useState(null);
+            const [canDrag, setCanDrag] = useState(false);
+            const [showAddModal, setShowAddModal] = useState(false);
+            const [isDraggingFile, setIsDraggingFile] = useState(null); // 记录哪个区域在进行文件拖拽
+
+            useEffect(() => { if (window.lucide) window.lucide.createIcons(); });
+
+            const handleSave = () => {
+                try {
+                    localStorage.setItem('local_resume_v7_persistent', JSON.stringify(data));
+                    setIsSaved(true);
+                    setTimeout(() => setIsSaved(false), 2000);
+                } catch (e) {
+                    alert("保存失败：简历内容（含图片/视频）过大，超出了浏览器的本地存储限制（通常为5MB）。建议减少高频资产或压缩文件。");
+                }
+            };
+
+            const updateBasic = (field, val) => setData({ ...data, basicInfo: { ...data.basicInfo, [field]: val } });
+
+            // 处理文件上传（支持 Base64 转换）
+            const handleFileUpload = async (files, type, callback) => {
+                const promises = Array.from(files).map(file => fileToBase64(file));
+                const base64Files = await Promise.all(promises);
+                callback(base64Files);
+            };
+
+            // 板块拖拽
+            const onDragStart = (idx) => setDraggedIdx(idx);
+            const onDrop = (idx) => {
+                const newSections = [...data.sections];
+                const item = newSections.splice(draggedIdx, 1)[0];
+                newSections.splice(idx, 0, item);
+                setData({ ...data, sections: newSections });
+                setDraggedIdx(null);
+                setCanDrag(false);
+            };
+
+            const removeListItem = (sIdx, iIdx) => {
+                const ns = [...data.sections];
+                ns[sIdx].items.splice(iIdx, 1);
+                setData({ ...data, sections: ns });
+            };
+
+            const addListItem = (sIdx) => {
+                const ns = [...data.sections];
+                ns[sIdx].items.push({ id: Date.now(), time: '', school: '', major: '', desc: '' });
+                setData({ ...data, sections: ns });
+            };
+
+            const addNewSection = (type) => {
+                const titles = { text: '专业技能', list: '获奖经历', img: '视觉资产', video: '视频履历' };
+                const newSection = {
+                    id: 'sec_' + Date.now(),
+                    title: titles[type] || '自定义维度',
+                    type: (type === 'img' || type === 'video') ? 'media_group' : type,
+                    items: type === 'list' ? [] : undefined,
+                    groups: (type === 'img' || type === 'video') ? [{ id: Date.now(), items: [], description: '' }] : undefined,
+                    mediaType: type === 'img' ? 'image' : (type === 'video' ? 'video' : undefined),
+                    content: type === 'text' ? '请输入内容...' : undefined
+                };
+                setData({ ...data, sections: [...data.sections, newSection] });
+                setShowAddModal(false);
+            };
+
+            const handleMediaUpload = async (sIdx, gIdx, files) => {
+                const ns = [...data.sections];
+                const mediaType = ns[sIdx].mediaType;
+                
+                const promises = Array.from(files).map(file => fileToBase64(file));
+                const base64Strings = await Promise.all(promises);
+                
+                const newMedia = base64Strings.map(base64 => ({
+                    id: Math.random().toString(36).substr(2, 9),
+                    url: base64,
+                    type: mediaType
+                }));
+                
+                const allItems = ns[sIdx].groups.flatMap(g => g.items).concat(newMedia);
+                const newGroups = [];
+                for (let i = 0; i < allItems.length; i += 3) {
+                    const chunk = allItems.slice(i, i + 3);
+                    newGroups.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        items: chunk,
+                        description: ns[sIdx].groups[Math.floor(i/3)]?.description || ''
+                    });
+                }
+                ns[sIdx].groups = newGroups;
+                setData({ ...data, sections: ns });
+            };
+
+            return (
+                <div className="min-h-screen pb-32">
+                    {/* 导航 */}
+                    <nav className="fixed top-0 inset-x-0 h-20 bg-white/80 backdrop-blur-xl border-b z-50 px-4 md:px-10 flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0">
+                                <Icon name="sparkles" />
+                            </div>
+                            <input 
+                                value={data.headerTitle} 
+                                onChange={e => setData({...data, headerTitle: e.target.value})}
+                                className="font-black text-slate-800 bg-transparent border-none focus:ring-0 outline-none text-xl w-full"
+                            />
+                        </div>
+                        <button 
+                            onClick={handleSave}
+                            className={`px-5 md:px-8 py-2.5 rounded-full font-bold transition-all flex items-center gap-2 shadow-xl shrink-0 ${isSaved ? 'bg-green-500 text-white shadow-green-200' : 'bg-blue-600 text-white hover:scale-105 shadow-blue-200'}`}
+                        >
+                            <Icon name="save" size={18} />
+                            <span className="hidden sm:inline">{isSaved ? '已保存' : '保存简历'}</span>
+                        </button>
+                    </nav>
+
+                    <div className="max-w-6xl mx-auto pt-32 px-4 flex flex-col lg:flex-row gap-10">
+                        {/* 侧边栏 */}
+                        <aside className="lg:w-80 space-y-6 shrink-0">
+                            <div className="glass-card rounded-[40px] p-8 shadow-2xl border border-white">
+                                {/* 头像上传：支持点击和拖拽 */}
+                                <div 
+                                    className={`relative group w-36 h-36 mx-auto mb-8 transition-all rounded-[45px] ${isDraggingFile === 'avatar' ? 'ring-4 ring-blue-400 scale-105' : ''}`}
+                                    onDragOver={(e) => { e.preventDefault(); setIsDraggingFile('avatar'); }}
+                                    onDragLeave={() => setIsDraggingFile(null)}
+                                    onDrop={async (e) => {
+                                        e.preventDefault();
+                                        setIsDraggingFile(null);
+                                        if (e.dataTransfer.files[0]) {
+                                            const base64 = await fileToBase64(e.dataTransfer.files[0]);
+                                            updateBasic('avatar', base64);
+                                        }
+                                    }}
+                                >
+                                    <div className="w-full h-full rounded-[45px] overflow-hidden shadow-2xl border-4 border-white ring-1 ring-blue-50">
+                                        <img src={data.basicInfo.avatar} className="w-full h-full object-cover" />
+                                    </div>
+                                    <label className="absolute inset-0 bg-blue-600/60 rounded-[45px] opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-all text-white backdrop-blur-sm">
+                                        <Icon name="camera" size={28} />
+                                        <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
+                                            if (e.target.files[0]) {
+                                                const base64 = await fileToBase64(e.target.files[0]);
+                                                updateBasic('avatar', base64);
+                                            }
+                                        }} />
+                                    </label>
+                                    {isDraggingFile === 'avatar' && <div className="absolute inset-0 bg-blue-500/20 rounded-[45px] pointer-events-none border-2 border-dashed border-blue-500 flex items-center justify-center text-blue-600 font-bold">放下更换</div>}
+                                </div>
+                                
+                                <div className="text-center space-y-4 mb-8">
+                                    <input value={data.basicInfo.name} onChange={e => updateBasic('name', e.target.value)} className="text-2xl font-black text-center w-full bg-transparent border-none focus:ring-0 outline-none p-0 focus:text-blue-600" />
+                                    <div className="text-slate-400 font-bold text-xs flex justify-center items-center gap-1 uppercase tracking-widest">
+                                        <select value={data.basicInfo.gender} onChange={e => updateBasic('gender', e.target.value)} className="bg-transparent outline-none cursor-pointer hover:text-blue-600">
+                                            <option value="男">男</option><option value="女">女</option>
+                                        </select>
+                                        <span>/</span>
+                                        <input value={data.basicInfo.age} onChange={e => updateBasic('age', e.target.value)} className="w-8 bg-transparent text-center outline-none hover:text-blue-600" />岁
+                                        <span>/</span>
+                                        <input value={data.basicInfo.workYears} onChange={e => updateBasic('workYears', e.target.value)} className="w-12 bg-transparent text-center outline-none hover:text-blue-600" />经验
+                                    </div>
+                                </div>
+                                <div className="space-y-4 border-t pt-8">
+                                    <div className="flex items-center gap-4 text-slate-600">
+                                        <Icon name="phone" size={16} className="text-blue-500"/>
+                                        <input value={data.basicInfo.phone} onChange={e => updateBasic('phone', e.target.value)} className="w-full bg-transparent outline-none text-sm font-bold border-none p-0" />
+                                    </div>
+                                    <div className="flex items-center gap-4 text-slate-600">
+                                        <Icon name="mail" size={16} className="text-indigo-500"/>
+                                        <input value={data.basicInfo.email} onChange={e => updateBasic('email', e.target.value)} className="w-full bg-transparent outline-none text-sm font-bold border-none p-0" />
+                                    </div>
+                                    <div className="flex items-center gap-4 text-slate-600">
+                                        <Icon name="map-pin" size={16} className="text-cyan-500"/>
+                                        <input value={data.basicInfo.city} onChange={e => updateBasic('city', e.target.value)} className="w-full bg-transparent outline-none text-sm font-bold border-none p-0" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="tech-gradient rounded-[40px] p-8 text-white shadow-2xl shadow-blue-900/20">
+                                <h3 className="font-black text-[10px] uppercase tracking-[4px] mb-6 text-blue-400">求职期望</h3>
+                                <div className="space-y-6">
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-white/30 font-bold">意向职位</label>
+                                        <input value={data.basicInfo.intent} onChange={e => updateBasic('intent', e.target.value)} className="bg-transparent text-base font-bold w-full outline-none border-none p-0 focus:text-blue-300" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] text-white/30 font-bold">期望薪资</label>
+                                        <input value={data.basicInfo.salary} onChange={e => updateBasic('salary', e.target.value)} className="bg-transparent text-base font-bold w-full outline-none border-none p-0 focus:text-blue-300" />
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        {/* 主区域内容 */}
+                        <main className="flex-1 space-y-8">
+                            {data.sections.map((section, sIdx) => (
+                                <div 
+                                    key={section.id}
+                                    draggable={canDrag}
+                                    onDragStart={() => onDragStart(sIdx)}
+                                    onDragEnd={() => setCanDrag(false)}
+                                    onDragOver={e => e.preventDefault()}
+                                    onDrop={() => onDrop(sIdx)}
+                                    className={`group bg-white/90 backdrop-blur-md rounded-[40px] p-8 md:p-10 border border-white shadow-xl transition-all ${draggedIdx === sIdx ? 'opacity-20 scale-95' : 'opacity-100 hover:shadow-blue-100/50'}`}
+                                >
+                                    <div className="flex items-center gap-4 mb-10">
+                                        <div 
+                                            onMouseEnter={() => setCanDrag(true)} 
+                                            onMouseLeave={() => setCanDrag(false)}
+                                            className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg cursor-move shrink-0"
+                                        >
+                                            <Icon name="grip-vertical" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <input 
+                                                value={section.title}
+                                                onChange={e => {
+                                                    const ns = [...data.sections];
+                                                    ns[sIdx].title = e.target.value;
+                                                    setData({...data, sections: ns});
+                                                }}
+                                                className="text-2xl font-black bg-transparent border-none focus:ring-0 outline-none p-0 text-slate-800"
+                                            />
+                                            <div className="h-1 w-12 bg-blue-500 mt-2 rounded-full group-hover:w-32 transition-all duration-500"></div>
+                                        </div>
+                                        <button onClick={() => setData({...data, sections: data.sections.filter(s => s.id !== section.id)})} className="p-2 text-slate-200 hover:text-red-500 transition-colors">
+                                            <Icon name="trash-2" />
+                                        </button>
+                                    </div>
+
+                                    {section.type === 'text' && (
+                                        <textarea 
+                                            value={section.content}
+                                            onChange={e => {
+                                                const ns = [...data.sections];
+                                                ns[sIdx].content = e.target.value;
+                                                setData({...data, sections: ns});
+                                            }}
+                                            className="w-full bg-slate-50/50 rounded-3xl p-6 text-slate-600 leading-relaxed outline-none border-none focus:ring-0 min-h-[140px]"
+                                        />
+                                    )}
+
+                                    {section.type === 'list' && (
+                                        <div className="space-y-10">
+                                            {section.items.map((item, iIdx) => (
+                                                <div key={item.id} className="relative pl-8 border-l-4 border-blue-100 group/item">
+                                                    <div className="absolute -left-[10px] top-0 w-4 h-4 bg-white border-4 border-blue-500 rounded-full"></div>
+                                                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                                                        <div className="flex flex-1 gap-4 items-center">
+                                                            <input value={item.school} onChange={e => {
+                                                                const ns = [...data.sections];
+                                                                ns[sIdx].items[iIdx].school = e.target.value;
+                                                                setData({...data, sections: ns});
+                                                            }} className="font-black text-xl text-slate-800 bg-transparent outline-none flex-1 border-none p-0" placeholder="公司/学校名称" />
+                                                            <input value={item.major} onChange={e => {
+                                                                const ns = [...data.sections];
+                                                                ns[sIdx].items[iIdx].major = e.target.value;
+                                                                setData({...data, sections: ns});
+                                                            }} className="text-base font-bold text-slate-400 bg-transparent outline-none border-none p-0 w-32" placeholder="设计师/专业" />
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <input value={item.time} onChange={e => {
+                                                                const ns = [...data.sections];
+                                                                ns[sIdx].items[iIdx].time = e.target.value;
+                                                                setData({...data, sections: ns});
+                                                            }} className="text-sm font-bold text-blue-500 bg-transparent outline-none w-32 md:text-right border-none p-0" placeholder="2020.01-至今" />
+                                                            <button onClick={() => removeListItem(sIdx, iIdx)} className="text-red-200 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-all p-1">
+                                                                <Icon name="x-circle" size={18} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <textarea 
+                                                        value={item.desc}
+                                                        onChange={e => {
+                                                            const ns = [...data.sections];
+                                                            ns[sIdx].items[iIdx].desc = e.target.value;
+                                                            setData({...data, sections: ns});
+                                                        }}
+                                                        className="w-full text-slate-500 text-sm bg-transparent outline-none resize-none border-none p-0"
+                                                        placeholder="描述具体工作职责..."
+                                                    />
+                                                </div>
+                                            ))}
+                                            <button onClick={() => addListItem(sIdx)} className="w-full py-4 rounded-3xl border-2 border-dashed border-slate-100 text-slate-300 hover:text-blue-500 transition-all font-bold text-sm">+ 增加新纪录</button>
+                                        </div>
+                                    )}
+
+                                    {section.type === 'media_group' && (
+                                        <div className="space-y-12">
+                                            {section.groups.map((group, gIdx) => (
+                                                <div key={group.id} className="space-y-6 bg-slate-50/50 p-6 rounded-[30px] border border-white">
+                                                    <div className="flex justify-between items-center px-2">
+                                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">作品组 #{gIdx+1}</span>
+                                                        {section.groups.length > 1 && <button onClick={() => {
+                                                            const ns = [...data.sections];
+                                                            ns[sIdx].groups.splice(gIdx, 1);
+                                                            setData({...data, sections: ns});
+                                                        }} className="text-red-300 hover:text-red-500"><Icon name="x" size={14} /></button>}
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                                        {group.items.map((m) => (
+                                                            <div key={m.id} className="relative aspect-[4/3] group/media overflow-hidden rounded-[24px] border-2 border-white shadow-md bg-white">
+                                                                {section.mediaType === 'image' ? <img src={m.url} className="w-full h-full object-cover" /> : 
+                                                                    <div className="w-full h-full bg-slate-900 flex items-center justify-center relative">
+                                                                        <video src={m.url} className="w-full h-full object-cover opacity-60" />
+                                                                        <Icon name="play" className="text-white absolute opacity-80" size={32} />
+                                                                    </div>
+                                                                }
+                                                                <div className="absolute inset-0 bg-blue-900/40 opacity-0 group-hover/media:opacity-100 flex items-center justify-center gap-2 backdrop-blur-sm transition-all">
+                                                                    <button onClick={() => setPreviewMedia(m)} className="p-2 bg-white text-blue-600 rounded-full hover:scale-110 shadow-lg"><Icon name="maximize-2" size={16}/></button>
+                                                                    <button onClick={() => {
+                                                                        const ns = [...data.sections];
+                                                                        ns[sIdx].groups[gIdx].items = ns[sIdx].groups[gIdx].items.filter(item => item.id !== m.id);
+                                                                        setData({...data, sections: ns});
+                                                                    }} className="p-2 bg-white text-red-500 rounded-full hover:scale-110 shadow-lg"><Icon name="trash-2" size={16}/></button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        {/* 拖拽上传区域 */}
+                                                        {group.items.length < 3 && (
+                                                            <label 
+                                                                className={`aspect-[4/3] flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed transition-all cursor-pointer group/upload
+                                                                    ${isDraggingFile === `media-${sIdx}-${gIdx}` ? 'border-blue-500 bg-blue-50' : 'border-slate-100 text-slate-300 hover:text-blue-500 hover:border-blue-200'}
+                                                                `}
+                                                                onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(`media-${sIdx}-${gIdx}`); }}
+                                                                onDragLeave={() => setIsDraggingFile(null)}
+                                                                onDrop={(e) => {
+                                                                    e.preventDefault();
+                                                                    setIsDraggingFile(null);
+                                                                    handleMediaUpload(sIdx, gIdx, e.dataTransfer.files);
+                                                                }}
+                                                            >
+                                                                <Icon name={section.mediaType === 'image' ? "plus" : "video"} size={24} className="group-hover/upload:scale-110 transition-transform" />
+                                                                <span className="text-[10px] font-black uppercase mt-2 tracking-widest">{isDraggingFile === `media-${sIdx}-${gIdx}` ? '放下上传' : '点此或拖拽上传'}</span>
+                                                                <input type="file" multiple hidden accept={section.mediaType === 'image' ? "image/*" : "video/*"} onChange={e => handleMediaUpload(sIdx, gIdx, e.target.files)} />
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                    <textarea 
+                                                        value={group.description}
+                                                        onChange={e => {
+                                                            const ns = [...data.sections];
+                                                            ns[sIdx].groups[gIdx].description = e.target.value;
+                                                            setData({...data, sections: ns});
+                                                        }}
+                                                        placeholder="请输入这组作品的描述与成就说明..."
+                                                        className="w-full bg-white rounded-2xl p-4 text-sm text-slate-600 border border-slate-100 outline-none min-h-[80px] focus:ring-1 focus:ring-blue-100 transition-all"
+                                                    />
+                                                </div>
+                                            ))}
+                                            <button onClick={() => {
+                                                const ns = [...data.sections];
+                                                ns[sIdx].groups.push({ id: Date.now(), items: [], description: '' });
+                                                setData({...data, sections: ns});
+                                            }} className="w-full py-4 bg-blue-50 text-blue-600 rounded-[30px] font-black text-xs uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm">+ 开启新作品组 (3项/组)</button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* 增加维度按钮 */}
+                            <div className="pt-12">
+                                <button 
+                                    onClick={() => setShowAddModal(true)}
+                                    className="w-full py-10 bg-white border-2 border-dashed border-blue-100 rounded-[40px] flex flex-col items-center justify-center gap-4 group hover:border-blue-500 hover:bg-blue-50 transition-all shadow-sm"
+                                >
+                                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                        <Icon name="plus-circle" size={32} />
+                                    </div>
+                                    <span className="font-black text-slate-400 group-hover:text-blue-600 tracking-widest uppercase">添加自定义简历维度 / 板块</span>
+                                </button>
+                            </div>
+                        </main>
+                    </div>
+
+                    {/* 全屏媒体预览 */}
+                    {previewMedia && (
+                        <div className="fixed inset-0 z-[100] bg-slate-900/95 flex items-center justify-center p-6 backdrop-blur-2xl" onClick={() => setPreviewMedia(null)}>
+                            {previewMedia.type === 'image' ? <img src={previewMedia.url} className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" /> : <video src={previewMedia.url} controls autoPlay className="max-w-full max-h-full rounded-xl shadow-2xl" />}
+                            <button className="absolute top-8 right-8 text-white/50 hover:text-white"><Icon name="x-circle" size={32} /></button>
+                        </div>
+                    )}
+
+                    {/* 添加维度弹窗 */}
+                    {showAddModal && (
+                        <div className="fixed inset-0 z-[100] modal-bg flex items-center justify-center p-6" onClick={() => setShowAddModal(false)}>
+                            <div className="bg-white rounded-[40px] w-full max-w-lg p-10 shadow-2xl animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-10">
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">添加自定义维度</h2>
+                                    <button onClick={() => setShowAddModal(false)} className="p-2 text-slate-300 hover:text-slate-900 transition-colors">
+                                        <Icon name="x-circle" size={28} />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <button onClick={() => addNewSection('text')} className="p-8 bg-slate-50 rounded-3xl hover:bg-blue-600 hover:text-white transition-all flex flex-col items-center gap-4 group">
+                                        <div className="p-4 bg-white rounded-2xl shadow-sm group-hover:bg-white/20 transition-all text-blue-600 group-hover:text-white"><Icon name="type" size={28} /></div>
+                                        <span className="font-bold">自由文本区</span>
+                                    </button>
+                                    <button onClick={() => addNewSection('list')} className="p-8 bg-slate-50 rounded-3xl hover:bg-blue-600 hover:text-white transition-all flex flex-col items-center gap-4 group">
+                                        <div className="p-4 bg-white rounded-2xl shadow-sm group-hover:bg-white/20 transition-all text-indigo-600 group-hover:text-white"><Icon name="list-checks" size={28} /></div>
+                                        <span className="font-bold">经历/列表项</span>
+                                    </button>
+                                    <button onClick={() => addNewSection('img')} className="p-8 bg-slate-50 rounded-3xl hover:bg-blue-600 hover:text-white transition-all flex flex-col items-center gap-4 group">
+                                        <div className="p-4 bg-white rounded-2xl shadow-sm group-hover:bg-white/20 transition-all text-cyan-600 group-hover:text-white"><Icon name="image" size={28} /></div>
+                                        <span className="font-bold">视觉作品组</span>
+                                    </button>
+                                    <button onClick={() => addNewSection('video')} className="p-8 bg-slate-50 rounded-3xl hover:bg-blue-600 hover:text-white transition-all flex flex-col items-center gap-4 group">
+                                        <div className="p-4 bg-white rounded-2xl shadow-sm group-hover:bg-white/20 transition-all text-orange-600 group-hover:text-white"><Icon name="video" size={28} /></div>
+                                        <span className="font-bold">视频资产组</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
