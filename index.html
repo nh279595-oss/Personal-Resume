@@ -83,7 +83,7 @@
         .avatar-circle {
             width: 200px; height: 200px; border-radius: 50%; padding: 4px;
             border: 2px solid var(--border-color); background: var(--primary);
-            transition: var(--transition); cursor: pointer; overflow: hidden;
+            transition: var(--transition); overflow: hidden;
             display: flex; align-items: center; justify-content: center;
         }
         .avatar-inner { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--primary); color: white; font-size: 3rem; font-weight: 800; }
@@ -99,7 +99,7 @@
         .btn-outline { border: 1px solid var(--border-color); background: white; color: var(--text-secondary); margin-left: 12px; }
         .btn-outline:hover { transform: scale(1.05); border-color: var(--primary); color: var(--primary); }
 
-        .about-card { background: white; border-radius: var(--radius-lg); padding: 60px; box-shadow: var(--shadow-md); display: flex; gap: 60px; border: 1px solid var(--border-color); }
+        .about-card { background: white; border-radius: var(--radius-lg); padding: 60px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; gap: 60px; border: 1px solid var(--border-color); }
         .about-content { flex: 1.5; }
         .tagline-bold { font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 20px; display: block; }
         .philosophy-quote { text-align: center; margin-top: 40px; font-weight: 700; color: var(--primary); font-size: 1.1rem; }
@@ -113,34 +113,18 @@
 
         .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px; }
         .service-card { background: white; padding: 40px; border-radius: var(--radius); border: 1px solid var(--border-color); transition: var(--transition); text-align: center; }
-        .service-card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: var(--shadow-md); }
+        .service-card:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 
         .work-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
         .work-card { 
             background: white; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border-color); 
             transition: var(--transition); cursor: pointer; position: relative;
         }
-        .work-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: var(--shadow-md); }
+        .work-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .work-thumb { height: 220px; background: #f8fafc; overflow: hidden; position: relative; }
         .work-thumb img, .work-thumb video { width: 100%; height: 100%; object-fit: cover; }
         .work-info { padding: 20px; }
         
-        .delete-btn {
-            position: absolute; top: 15px; right: 15px; width: 34px; height: 34px;
-            background: var(--danger); color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; transition: var(--transition); z-index: 50;
-            cursor: pointer; font-size: 20px; border: 2px solid white;
-        }
-        .work-card:hover .delete-btn { opacity: 1; }
-
-        .add-card { 
-            border: 2px dashed var(--text-muted); background: rgba(241, 245, 249, 0.3); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px;
-            color: var(--text-muted); transition: var(--transition);
-        }
-        .add-card:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
-
         .contact-box { background: #0f172a; color: white; border-radius: var(--radius-lg); padding: 60px; text-align: center; }
         .contact-items { display: flex; justify-content: center; gap: 40px; margin-top: 40px; flex-wrap: wrap; }
         .contact-item { 
@@ -152,16 +136,14 @@
         .contact-item:hover strong { color: var(--accent); }
 
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 25px; border-radius: 50px; z-index: 3000; opacity: 0; transition: 0.3s; pointer-events: none;}
-        [contenteditable]:hover { background: rgba(43, 92, 255, 0.05); border-radius: 4px; outline: none; }
 
-        /* Lightbox 样式 */
         #lightbox {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 5000; display: none;
             justify-content: center; align-items: center; cursor: zoom-out;
             backdrop-filter: blur(8px);
         }
-        #lightbox img { max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); transform: scale(0.9); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #lightbox img { max-width: 90%; max-height: 90%; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); transform: scale(0.9); transition: 0.3s; }
         #lightbox.active img { transform: scale(1); }
 
         @media (max-width: 992px) {
@@ -195,13 +177,13 @@
     <section id="hero">
         <div class="container hero-grid">
             <div class="hero-avatar-box">
-                <div class="avatar-circle" onclick="document.getElementById('avatar-input').click()">
-                    <div class="avatar-inner" id="avatar-container">
-                        <span id="avatar-text">Leo</span>
-                        <img id="avatar-img" src="" style="display:none;" onerror="this.style.display='none'; document.getElementById('avatar-text').style.display='block'">
+                <div class="avatar-circle">
+                    <div class="avatar-inner">
+                        <!-- 确保 assets 文件夹中有叫 avatar.jpg 的图片 -->
+                        <img id="avatar-img" src="./assets/avatar.jpg" onerror="this.style.display='none'; document.getElementById('avatar-text').style.display='block'">
+                        <span id="avatar-text" style="display:none;">Leo</span>
                     </div>
                 </div>
-                <input type="file" id="avatar-input" hidden onchange="handleFileSelect(this, 'avatar')">
             </div>
             <div class="hero-text-area">
                 <h2 data-i18n="hero_hello">你好，我是李浩藩</h2>
@@ -209,7 +191,7 @@
                 <span class="hero-slogan-en">AI-Driven Storytelling & Visual Design</span>
                 <div class="hero-btns">
                     <a href="#visual" class="btn btn-primary" data-i18n="btn_portfolio">查看作品集</a>
-                    <button class="btn btn-outline" onclick="exportData()" data-i18n="btn_download">下载 PDF</button>
+                    <button class="btn btn-outline" onclick="window.print()" data-i18n="btn_download">下载 PDF</button>
                 </div>
             </div>
         </div>
@@ -220,14 +202,10 @@
             <div class="about-card">
                 <div class="about-content">
                     <span class="tagline-bold" data-i18n="about_tag">用AI重构视觉叙事的创作者</span>
-                    <p id="about-text" style="color: var(--text-secondary); text-align: justify;" contenteditable="true" data-i18n="about_content">
-                        我是一名兼具设计美学功底、拍摄实战经验与 AI 技术能力的 AI 漫剧制作师。从传统电商视觉到 AI 内容创作，我完整经历了内容生产范式的迭代升级，深知 “技术服务于内容、效率服务于体验” 的创作痛点。我的核心创作理念是：AI 技术只有服务于真实内容需求、创造优质视觉价值时，才具备真正的生命力。我擅长将商业设计逻辑与 AI 创作能力结合，通过精细化的角色设定、场景构建、运镜设计，推动 AI 视频内容在短剧、广告、品牌宣传等场景的规模化落地。作为技术与创意之间的桥梁，我既能基于单反实拍与 AI 生成的融合思路，打磨 Seedance 等工具的视频制作全流程；也能对齐内容目标与用户体验，打造兼具观赏性与传播力的 AI 漫剧作品。
-                    </p>
+                    <p id="about-text" style="color: var(--text-secondary); text-align: justify;" data-i18n="about_content"></p>
                     <div class="philosophy-quote" data-i18n="about_philosophy">“技术服务内容，效率服务体验”</div>
                 </div>
-                <div class="about-features" id="feature-list">
-                    <!-- 由 JS 初始化渲染 -->
-                </div>
+                <div class="about-features" id="feature-list"></div>
             </div>
         </div>
     </section>
@@ -264,13 +242,7 @@
                 <span class="tag-gray" data-i18n="label_projects">精选项目</span>
                 <h2 style="font-size: 2.2rem;" data-i18n="nav_visual">视觉资产</h2>
             </div>
-            <div class="work-grid" id="visual-grid">
-                <div class="work-card add-card" onclick="document.getElementById('input-visual').click()" ondrop="handleDrop(event, 'visual')" ondragover="e=>e.preventDefault()">
-                    <span style="font-size: 2rem;">+</span>
-                    <p data-i18n="add_visual">点击或拖拽上传图片</p>
-                    <input type="file" id="input-visual" hidden accept="image/*" onchange="handleFileSelect(this, 'visual')">
-                </div>
-            </div>
+            <div class="work-grid" id="visual-grid"></div>
         </div>
     </section>
 
@@ -280,13 +252,7 @@
                 <span class="tag-gray" data-i18n="label_projects">精选项目</span>
                 <h2 style="font-size: 2.2rem;" data-i18n="nav_video">视频履历</h2>
             </div>
-            <div class="work-grid" id="video-grid">
-                <div class="work-card add-card" onclick="document.getElementById('input-video').click()" ondrop="handleDrop(event, 'video')" ondragover="e=>e.preventDefault()">
-                    <span style="font-size: 2rem;">▶</span>
-                    <p data-i18n="add_video">点击或拖拽上传视频</p>
-                    <input type="file" id="input-video" hidden accept="video/*" onchange="handleFileSelect(this, 'video')">
-                </div>
-            </div>
+            <div class="work-grid" id="video-grid"></div>
         </div>
     </section>
 
@@ -294,7 +260,6 @@
         <div class="container">
             <div class="contact-box">
                 <h2 style="font-size: 2.2rem;" data-i18n="contact_title">联系我・开启创意合作</h2>
-                <p style="margin-top: 10px; color: #94a3b8;" data-i18n="contact_tag">期待和你一起，把创意变成现实</p>
                 <div class="contact-items">
                     <div class="contact-item" onclick="copy('Nh279595@163.com')">
                         <small data-i18n="label_email">📩 邮箱</small><br><strong>Nh279595@163.com</strong>
@@ -308,127 +273,80 @@
     </section>
 
     <footer style="padding: 40px 0; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.8rem; color: var(--text-muted);">
-        <div class="container">
-            © 2026 李浩藩 Leo.Design | AI漫剧制作师 & 设计师 | Powered by Creativity & AI
-        </div>
+        <div class="container">© 2026 李浩藩 Leo.Design | AI漫剧制作师 & 设计师</div>
     </footer>
 
-    <div id="lightbox" onclick="closeLightbox()">
-        <img id="lightbox-img" src="" alt="Zoomed view">
-    </div>
-
+    <div id="lightbox" onclick="closeLightbox()"><img id="lightbox-img" src=""></div>
     <div class="toast" id="toast">操作成功</div>
 
     <script>
-        const DATA_FILENAME = "portfolio-data.json";
-        let isEnglish = false;
+        // ==========================================
+        // 1. 内容配置中心 (请在这里修改你的文件名)
+        // ==========================================
+        
+        // 视觉资产图片数组 (放到 assets 文件夹里)
+        const localVisualAssets = [
+            { src: "./assets/img1.jpg", title: "赛博风格场景", desc: "Midjourney 概念生成" },
+            { src: "./assets/img2.png", title: "角色一致性测试", desc: "Stable Diffusion 训练模型" },
+            { src: "./assets/img3.jpg", title: "分镜草图", desc: "AI 辅助分镜构建" },
+            { src: "./assets/img4.jpg", title: "场景概念图", desc: "商业项目场景设定" }
+        ];
 
+        // 视频履历数组 (放到 assets 文件夹里)
+        const localVideoResume = [
+            { src: "./assets/video1.mp4", title: "打斗剧", desc: "Seedance视频制作" },
+            { src: "./assets/video2.mp4", title: "真人海外剧", desc: "重生后的女主（闹钟）发现自己的异能" }
+        ];
+
+        // 核心能力标签
+        const localFeatures = [
+            { icon: "🚀", key: "0 到 1", desc: "闭环能力", keyEn: "0 to 1", descEn: "Full Cycle" },
+            { icon: "✨", key: "多平台", desc: "内容适配", keyEn: "Multi-Platform", descEn: "Adaptation" },
+            { icon: "📚", key: "系统课程", desc: "方法论沉淀", keyEn: "Courses", descEn: "Methodology" },
+            { icon: "🎥", key: "运镜 + AI", desc: "镜头融合", keyEn: "Cam + AI", descEn: "Cinematic" }
+        ];
+
+        // ==========================================
+        // 2. 逻辑系统 (无需修改)
+        // ==========================================
+        let isEnglish = false;
         const i18n = {
             zh: {
                 nav_home: "首页", nav_about: "简介", nav_services: "服务范围", nav_visual: "视觉资产", nav_video: "视频履历", nav_contact: "联系我",
                 hero_hello: "你好，我是李浩藩", hero_title: "AI 漫剧制作师<br>& AI 设计师", btn_portfolio: "查看作品集", btn_download: "下载 PDF",
                 about_tag: "用AI重构视觉叙事的创作者", about_philosophy: "“技术服务内容，效率服务体验”",
-                about_content: "我是一名兼具设计美学功底、拍摄实战经验与 AI 技术能力的 AI 漫剧制作师。从传统电商视觉到 AI 内容创作，我完整经历了内容生产范式的迭代升级，深知 “技术服务于内容、效率服务于体验” 的创作痛点。我的核心创作理念是：AI 技术只有服务于真实内容需求、创造优质视觉价值时，才具备真正的生命力。我擅长将商业设计逻辑与 AI 创作能力结合，通过精细化的角色设定、场景构建、运镜设计，推动 AI 视频内容在短剧、广告、品牌宣传等场景的规模化落地。作为技术与创意之间的桥梁，我既能基于单反实拍与 AI 生成的融合思路，打磨 Seedance 等工具的视频制作全流程；也能对齐内容目标与用户体验，打造兼具观赏性与传播力的 AI 漫剧作品。",
+                about_content: "我是一名兼具设计美学功底、拍摄实战经验与 AI 技术能力的 AI 漫剧制作师。从传统电商视觉到 AI 内容创作，我完整经历了内容生产范式的迭代升级。我擅长将商业设计逻辑与 AI 创作能力结合，通过精细化的角色设定、场景构建、运镜设计，推动 AI 视频内容在短剧、广告、品牌宣传等场景的规模化落地。",
                 services_title: "我能提供的服务", label_services: "WHAT I DO", service_1_title: "AI 漫剧定制", service_1_desc: "全流程 AI 漫剧制作，深度适配各平台传播需求。", service_2_title: "视觉资产设计", service_2_desc: "角色一致性设定、场景概念图、分镜稿绘制。", service_3_title: "商业短片制作", service_3_desc: "品牌广告、概念 PV，利用 AI 实现电影级叙事。",
-                label_projects: "精选项目", add_visual: "点击或拖拽上传图片", add_video: "点击或拖拽上传视频",
-                contact_title: "联系我・开启创意合作", contact_tag: "期待和你一起，把创意变成现实", label_email: "📩 邮箱", label_phone: "📱 电话",
-                msg_copy: "已复制：", msg_lang: "已切换为中文"
+                label_projects: "精选项目", msg_copy: "已复制：", msg_lang: "已切换为中文"
             },
             en: {
                 nav_home: "Home", nav_about: "About", nav_services: "Services", nav_visual: "Visual Assets", nav_video: "Videos", nav_contact: "Contact",
                 hero_hello: "Hi, I'm Haofan Li", hero_title: "AI Comic Producer<br>& AI Designer", btn_portfolio: "Portfolio", btn_download: "Download PDF",
-                about_tag: "Reconstructing Visual Storytelling with AI", about_philosophy: "“Tech serves content, Efficiency serves experience”",
-                about_content: "I am an AI comic producer with design aesthetics, filming experience, and AI expertise. From e-commerce visuals to AI creation, I've seen the production paradigm shift. My core philosophy: AI only thrives when it serves real content needs and creates visual value. I excel at merging business logic with AI, using refined character settings and cinematic design to scale AI video content for short dramas, ads, and brand promos. As a bridge between tech and creativity, I refine workflows for tools like Seedance and build impactful AI comic works.",
-                services_title: "My Services", label_services: "WHAT I DO", service_1_title: "AI Comic Customization", service_1_desc: "Full pipeline AI comic production adapted for social platforms.", service_2_title: "Visual Assets Design", service_2_desc: "Character consistency, concept art, and storyboard drawing.", service_3_title: "Commercial Short Films", service_3_desc: "Brand ads and concept PVs using AI for cinematic narratives.",
-                label_projects: "SELECTED PROJECTS", add_visual: "Click or Drag to Upload Image", add_video: "Click or Drag to Upload Video",
-                contact_title: "Let's Collaborate", contact_tag: "Turning creativity into reality together", label_email: "📩 Email", label_phone: "Phone",
-                msg_copy: "Copied: ", msg_lang: "Switched to English"
+                about_tag: "Reconstructing Visuals with AI", about_philosophy: "“Tech serves content, Efficiency serves experience”",
+                about_content: "I am an AI comic producer with design aesthetics, filming experience, and AI expertise. I excel at merging business logic with AI, using refined character settings and cinematic design to scale AI video content for short dramas, ads, and brand promos.",
+                services_title: "My Services", label_services: "WHAT I DO", service_1_title: "AI Comic Production", service_1_desc: "Full pipeline AI comic production adapted for social platforms.", service_2_title: "Visual Asset Design", service_2_desc: "Character consistency, concept art, and storyboards.", service_3_title: "Commercial Shorts", service_3_desc: "Brand ads and concept PVs using AI for cinematic narratives.",
+                label_projects: "SELECTED PROJECTS", msg_copy: "Copied: ", msg_lang: "Switched to English"
             }
         };
 
-        const defaultData = {
-            features: [
-                { icon: "🚀", key: "0 到 1", desc: "闭环能力", keyEn: "0 to 1", descEn: "Full Cycle" },
-                { icon: "✨", key: "多平台", desc: "内容适配", keyEn: "Multi-Platform", descEn: "Adaptation" },
-                { icon: "📚", key: "系统课程", desc: "方法论沉淀", keyEn: "Courses", descEn: "Methodology" },
-                { icon: "🎥", key: "运镜 + AI", desc: "镜头融合", keyEn: "Cam + AI", descEn: "Cinematic" }
-            ],
-            visual_assets: [
-                { src: "https://placehold.co/600x400/2b5cff/ffffff?text=AI+Visual+1", title: "赛博场景设定", desc: "Midjourney 建筑概念" }
-            ]
-        };
-
-        async function init() {
-            // 1. 立即加载默认数据 (UI First)
-            renderFeatures(defaultData.features);
-            defaultData.visual_assets.forEach(v => addWork('visual', v.src, v.title, v.desc));
+        function init() {
+            renderFeatures(localFeatures);
+            localVisualAssets.forEach(v => addWork('visual', v.src, v.title, v.desc));
+            localVideoResume.forEach(v => addWork('video', v.src, v.title, v.desc));
             updateUI();
             setupInteractions();
-
-            // 2. 尝试读取 JSON 覆盖 (Fetch Second)
-            try {
-                const safeUrl = encodeURI(DATA_FILENAME) + `?v=${Date.now()}`;
-                const res = await fetch(safeUrl);
-                if (res.ok) {
-                    const jsonData = await res.json();
-                    
-                    // 清空现有默认作品卡片 (不包含 add-card)
-                    document.querySelectorAll('.work-card:not(.add-card)').forEach(c => c.remove());
-
-                    // 覆盖同步 i18n 字典
-                    if (jsonData.personalInfo) {
-                        const info = jsonData.personalInfo;
-                        if (info.name) {
-                            i18n.zh.hero_hello = `你好，我是${info.name}`;
-                            i18n.en.hero_hello = `Hi, I'm ${info.name}`;
-                        }
-                        if (info.about) {
-                            // 同步更新简介到字典
-                            i18n.zh.about_content = info.about;
-                            // 如果没有专门的英文简介，则默认都显示为 JSON 里的简介，防止切换语言时跳回默认演示文本
-                            if (!info.aboutEn) i18n.en.about_content = info.about;
-                        }
-                        if (info.aboutEn) {
-                            i18n.en.about_content = info.aboutEn;
-                        }
-                        
-                        // 头像同步
-                        if (info.avatar) {
-                            const img = document.getElementById('avatar-img');
-                            img.src = info.avatar; img.style.display = 'block';
-                            document.getElementById('avatar-text').style.display = 'none';
-                        }
-                    }
-
-                    // 渲染作品数据
-                    if(jsonData.features) renderFeatures(jsonData.features);
-                    if(jsonData.visual_assets) jsonData.visual_assets.forEach(v => addWork('visual', v.src, v.title, v.desc));
-                    if(jsonData.video_resume) jsonData.video_resume.forEach(v => addWork('video', v.src, v.title, v.desc));
-
-                    // 强制刷新一次简介 DOM 和其他 data-i18n 元素
-                    updateUI();
-                }
-            } catch (e) {
-                console.warn("JSON loading skipped or failed, using defaults.");
-            }
         }
 
-        function toggleLang() {
-            isEnglish = !isEnglish;
-            updateUI();
-            showTip(isEnglish ? i18n.en.msg_lang : i18n.zh.msg_lang);
-        }
+        function toggleLang() { isEnglish = !isEnglish; updateUI(); showTip(isEnglish ? i18n.en.msg_lang : i18n.zh.msg_lang); }
 
         function updateUI() {
             const lang = isEnglish ? 'en' : 'zh';
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.dataset.i18n;
-                if (i18n[lang][key]) {
-                    if (document.activeElement === el) return;
-                    el.innerHTML = i18n[lang][key];
-                }
+                if (i18n[lang][key]) el.innerHTML = i18n[lang][key];
             });
             document.querySelector('.lang-btn').innerText = isEnglish ? "En/中文" : "中文/En";
+            renderFeatures(localFeatures); 
         }
 
         function renderFeatures(features) {
@@ -436,56 +354,11 @@
             if(!list) return;
             list.innerHTML = features.map(f => `
                 <div class="feature-item">
-                    <span class="feature-icon">${f.icon}</span>
-                    <strong style="font-size: 0.9rem; display: block;">${isEnglish ? f.keyEn : f.key}</strong>
+                    <span style="font-size:1.5rem">${f.icon}</span>
+                    <strong style="font-size: 0.9rem; display: block; margin: 5px 0;">${isEnglish ? f.keyEn : f.key}</strong>
                     <div style="font-size: 0.7rem; opacity: 0.6;">${isEnglish ? f.descEn : f.desc}</div>
                 </div>
             `).join('');
-        }
-
-        function openLightbox(src) {
-            const lb = document.getElementById('lightbox');
-            const lbImg = document.getElementById('lightbox-img');
-            lbImg.src = src;
-            lb.style.display = 'flex';
-            setTimeout(() => lb.classList.add('active'), 10);
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeLightbox() {
-            const lb = document.getElementById('lightbox');
-            lb.classList.remove('active');
-            setTimeout(() => {
-                lb.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }, 300);
-        }
-
-        function handleFileSelect(input, type) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    if (type === 'avatar') {
-                        const img = document.getElementById('avatar-img');
-                        img.src = e.target.result; img.style.display = 'block';
-                        document.getElementById('avatar-text').style.display = 'none';
-                    } else {
-                        addWork(type, e.target.result, isEnglish ? 'New Project' : '新增项目', isEnglish ? 'Description' : '点击编辑描述');
-                    }
-                };
-                reader.readAsDataURL(input.files[0]);
-                input.value = '';
-            }
-        }
-
-        function handleDrop(e, type) {
-            e.preventDefault();
-            const files = e.dataTransfer.files;
-            if (files && files[0]) {
-                const reader = new FileReader();
-                reader.onload = ev => addWork(type, ev.target.result, isEnglish ? 'New Project' : '新增项目', isEnglish ? 'Description' : '点击编辑描述');
-                reader.readAsDataURL(files[0]);
-            }
         }
 
         function addWork(containerId, src, title, desc) {
@@ -493,64 +366,30 @@
             if(!grid) return;
             const card = document.createElement('div');
             card.className = 'work-card';
-            
-            const delBtn = document.createElement('div');
-            delBtn.className = 'delete-btn';
-            delBtn.innerHTML = '&times;';
-            delBtn.onclick = (e) => { e.stopPropagation(); card.remove(); };
-            card.appendChild(delBtn);
-
             const thumb = document.createElement('div');
             thumb.className = 'work-thumb';
-            // 添加点击放大事件
-            if (containerId === 'visual') {
-                thumb.onclick = () => openLightbox(src);
-            }
-            thumb.innerHTML = containerId === 'video' ? `<video src="${src}" controls></video>` : `<img src="${src}">`;
+            if (containerId === 'visual') thumb.onclick = () => openLightbox(src);
+            thumb.innerHTML = containerId === 'video' ? `<video src="${src}" controls preload="metadata"></video>` : `<img src="${src}" loading="lazy">`;
             card.appendChild(thumb);
-
             const info = document.createElement('div');
             info.className = 'work-info';
-            info.innerHTML = `
-                <h4 contenteditable="true" style="font-size: 1rem; margin-bottom: 5px;">${title}</h4>
-                <p contenteditable="true" style="font-size: 0.8rem; color: var(--text-muted);">${desc}</p>
-            `;
+            info.innerHTML = `<h4 style="font-size: 1rem; margin-bottom: 5px;">${title}</h4><p style="font-size: 0.8rem; color: var(--text-muted);">${desc}</p>`;
             card.appendChild(info);
-            grid.insertBefore(card, grid.querySelector('.add-card'));
+            grid.appendChild(card);
         }
 
-        function exportData() {
-            const avatarImg = document.getElementById('avatar-img');
-            const exportObj = {
-                personalInfo: {
-                    name: "李浩藩",
-                    about: document.getElementById('about-text').innerText,
-                    avatar: avatarImg.style.display !== 'none' ? avatarImg.src : ""
-                },
-                visual_assets: Array.from(document.querySelectorAll('#visual-grid .work-card:not(.add-card)')).map(c => ({
-                    src: c.querySelector('img').src,
-                    title: c.querySelector('h4').innerText,
-                    desc: c.querySelector('p').innerText
-                })),
-                video_resume: Array.from(document.querySelectorAll('#video-grid .work-card:not(.add-card)')).map(c => ({
-                    src: c.querySelector('video').src,
-                    title: c.querySelector('h4').innerText,
-                    desc: c.querySelector('p').innerText
-                })),
-                timestamp: new Date().toISOString()
-            };
+        function openLightbox(src) {
+            const lb = document.getElementById('lightbox');
+            const lbImg = document.getElementById('lightbox-img');
+            lbImg.src = src; lb.style.display = 'flex';
+            setTimeout(() => lb.classList.add('active'), 10);
+            document.body.style.overflow = 'hidden';
+        }
 
-            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = DATA_FILENAME;
-            document.body.appendChild(a); a.click();
-            document.body.removeChild(a);
-
-            setTimeout(() => {
-                window.print();
-                showTip("数据已导出为JSON，同时唤起PDF保存");
-            }, 800);
+        function closeLightbox() {
+            const lb = document.getElementById('lightbox');
+            lb.classList.remove('active');
+            setTimeout(() => { lb.style.display = 'none'; document.body.style.overflow = 'auto'; }, 300);
         }
 
         function copy(text) {
@@ -562,7 +401,6 @@
 
         function showTip(msg) {
             const t = document.getElementById('toast');
-            if(!t) return;
             t.innerText = msg; t.style.opacity = 1;
             setTimeout(() => t.style.opacity = 0, 2500);
         }
@@ -570,11 +408,9 @@
         function setupInteractions() {
             window.addEventListener('scroll', () => {
                 const progress = document.getElementById("scroll-progress");
-                if(!progress) return;
                 const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-                progress.style.width = scrolled + "%";
+                if(progress) progress.style.width = scrolled + "%";
             });
-
             const dot = document.querySelector('.cursor-dot');
             const outline = document.querySelector('.cursor-outline');
             window.addEventListener('mousemove', e => {
